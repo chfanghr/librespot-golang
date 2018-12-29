@@ -9,11 +9,27 @@ import (
 	"librespot/connection"
 	"librespot/discovery"
 	"librespot/utils"
-	"log"
+	l "log"
+	"os"
 )
 
 var Version = "master"
 var BuildID = "dev"
+var log *l.Logger
+
+func init() {
+	nulldev, err := os.OpenFile("/dev/null", os.O_APPEND|os.O_WRONLY, 0666)
+	if err != nil {
+		panic(err)
+	}
+	log = l.New(nulldev, "", l.LstdFlags)
+}
+
+func SetLogger(logger *l.Logger) {
+	if logger != nil {
+		log = logger
+	}
+}
 
 // Login to Spotify using username and password
 func Login(username string, password string, deviceName string) (*Session, error) {
@@ -150,8 +166,8 @@ func (s *Session) handleLogin() (*Spotify.APWelcome, error) {
 		if err != nil {
 			return nil, fmt.Errorf("authentication failed: %v", err)
 		}
-		fmt.Println("Authentication succeeded: Welcome,", welcome.GetCanonicalUsername())
-		fmt.Println("Blob type:", welcome.GetReusableAuthCredentialsType())
+		log.Println("Authentication succeeded: Welcome,", welcome.GetCanonicalUsername())
+		log.Println("Blob type:", welcome.GetReusableAuthCredentialsType())
 		return welcome, nil
 	} else {
 		return nil, fmt.Errorf("authentication failed: unexpected cmd %v", cmd)
@@ -189,8 +205,8 @@ func makeLoginBlobPacket(username string, authData []byte,
 			AuthData: authData,
 		},
 		SystemInfo: &Spotify.SystemInfo{
-			CpuFamily: Spotify.CpuFamily_CPU_UNKNOWN.Enum(),
-			Os:        Spotify.Os_OS_UNKNOWN.Enum(),
+			CpuFamily:               Spotify.CpuFamily_CPU_UNKNOWN.Enum(),
+			Os:                      Spotify.Os_OS_UNKNOWN.Enum(),
 			SystemInformationString: proto.String("librespot-golang"),
 			DeviceId:                proto.String(deviceId),
 		},

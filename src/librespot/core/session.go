@@ -12,7 +12,6 @@ import (
 	"librespot/mercury"
 	"librespot/player"
 	"librespot/utils"
-	"log"
 	"net"
 	"time"
 )
